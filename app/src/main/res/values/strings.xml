@@ -13,4 +13,7 @@
     <string name="search">Search</string>
     <string name="share">Share</string>
     <string name="open_with_browser">Open With Browser</string>
+    <string name="error_title">Error Title</string>
+    <string name="error_message">Error Message</string>
+    <string name="retry">Retry</string>
 </resources>

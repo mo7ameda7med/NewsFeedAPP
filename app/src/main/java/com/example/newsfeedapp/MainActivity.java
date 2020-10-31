@@ -8,8 +8,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SearchView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +48,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private String TAG = MainActivity.class.getSimpleName();
     private TextView topHeadLine;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private RelativeLayout errorLayout;
+    private ImageView errorImage;
+    private TextView errorTitle ,errorMessage;
+    private Button btnRetry;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +70,17 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         recyclerView.setNestedScrollingEnabled(false);
 
         onLoadingSwipeRefresh("");
+
+        errorLayout=findViewById(R.id.errorLayout);
+        errorImage=findViewById(R.id.errorImage);
+        errorTitle=findViewById(R.id.errorTitle);
+        errorMessage=findViewById(R.id.errorMessage);
+        btnRetry=findViewById(R.id.btnRetry);
     }
 
     public void loadJson(final String keyword) {
 
+        errorLayout.setVisibility(View.GONE);
         topHeadLine.setVisibility(View.INVISIBLE);
         swipeRefreshLayout.setRefreshing(true);
 
@@ -111,7 +125,23 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 {
                     topHeadLine.setVisibility(View.INVISIBLE);
                     swipeRefreshLayout.setRefreshing(false);
-                    Toast.makeText(MainActivity.this, "No Result!", Toast.LENGTH_SHORT).show();
+                    String errorCode;
+                    switch (response.code())
+                    {
+                        case 404:
+                            errorCode="404 not found";
+                            break;
+                        case 500:
+                            errorCode ="500 server broken";
+                            break;
+                        default:
+                            errorCode="unknown error";
+                            break;
+                    }
+                    showErrorMessage(R.drawable.no_result,
+                            "No Result",
+                            "Please Try Again\n"+
+                            errorCode);
                 }
             }
 
@@ -119,6 +149,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             public void onFailure(Call<News> call, Throwable t) {
                 topHeadLine.setVisibility(View.INVISIBLE);
                 swipeRefreshLayout.setRefreshing(false);
+                showErrorMessage(R.drawable.no_result,
+                        "Oops..",
+                        "Network failure, Please Try Again\n"+
+                                t.toString());
             }
         });
     }
@@ -187,6 +221,23 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public void run() {
                 loadJson(keyword);
+            }
+        });
+    }
+
+    private void showErrorMessage(int imageView,String title,String message)
+    {
+        if(errorLayout.getVisibility()==View.GONE) {
+            errorLayout.setVisibility(View.VISIBLE);
+        }
+        errorImage.setImageResource(imageView);
+        errorTitle.setText(title);
+        errorMessage.setText(message);
+
+        btnRetry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onLoadingSwipeRefresh("");
             }
         });
     }
